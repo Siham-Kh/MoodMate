@@ -7,7 +7,9 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityProvider } from './src/contexts/ActivityContext';
 import HomeScreen from './src/screens/HomeScreen';
 import SuggestionsScreen from './src/screens/SuggestionsScreen';
+import MoodHistoryScreen from './src/screens/MoodHistoryScreen';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from './src/constants/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,17 +22,18 @@ export default function App() {
           <Tab.Navigator
             screenOptions={{
               headerStyle: {
-                backgroundColor: '#6366f1',
+                backgroundColor: COLORS.primary,
               },
-              headerTintColor: '#fff',
+              headerTintColor: COLORS.background,
               headerTitleStyle: {
                 fontWeight: 'bold',
               },
-              tabBarActiveTintColor: '#6366f1',
+              tabBarActiveTintColor: COLORS.primary,
               tabBarInactiveTintColor: 'gray',
               tabBarStyle: {
                 paddingBottom: 5,
                 paddingTop: 5,
+                height: 60,
               },
             }}
           >
@@ -41,6 +44,16 @@ export default function App() {
                 title: 'MoodMate',
                 tabBarIcon: ({ color, size }) => (
                   <Ionicons name="home" size={size} color={color} />
+                ),
+              }}
+            />
+            <Tab.Screen 
+              name="History" 
+              component={MoodHistoryScreen}
+              options={{
+                title: 'Mood History',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="bar-chart" size={size} color={color} />
                 ),
               }}
             />
