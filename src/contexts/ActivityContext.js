@@ -28,12 +28,10 @@ export function ActivityProvider({ children }) {
       const savedHistory = await AsyncStorage.getItem('moodHistory');
       if (savedHistory) {
         const parsedHistory = JSON.parse(savedHistory);
-        setMoodHistory(parsedHistory);
-        // Set current mood to the most recent entry
-        if (parsedHistory.length > 0) {
-          const latestMood = parsedHistory[parsedHistory.length - 1];
-          setCurrentMood(latestMood.mood);
-        }
+        // Sort by timestamp, most recent first
+        setMoodHistory(parsedHistory.sort((a, b) => 
+          new Date(b.timestamp) - new Date(a.timestamp)
+        ));
       }
     } catch (error) {
       console.error('Error loading mood history:', error);
@@ -43,16 +41,17 @@ export function ActivityProvider({ children }) {
   };
 
   const saveMoodEntry = async (moodEntry) => {
-    if (!moodEntry || !moodEntry.mood) {
-      console.error('Invalid mood entry');
-      return false;
-    }
-
     try {
-      const newHistory = [...moodHistory, moodEntry];
+      // Create new history array with the new entry
+      const newHistory = [...moodHistory, moodEntry].sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+
+      // Update state first for immediate UI update
       setMoodHistory(newHistory);
       setCurrentMood(moodEntry.mood);
-      
+
+      // Then save to AsyncStorage
       await AsyncStorage.setItem('moodHistory', JSON.stringify(newHistory));
       return true;
     } catch (error) {
@@ -61,32 +60,30 @@ export function ActivityProvider({ children }) {
     }
   };
 
-  const editMoodEntry = async (timestamp, updatedEntry) => {
+  const deleteMoodEntry = async (timestamp) => {
     try {
-      const newHistory = moodHistory.map(entry =>
-        entry.timestamp === timestamp ? updatedEntry : entry
-      );
+      const newHistory = moodHistory.filter(entry => entry.timestamp !== timestamp);
       setMoodHistory(newHistory);
       await AsyncStorage.setItem('moodHistory', JSON.stringify(newHistory));
       return true;
     } catch (error) {
-      console.error('Error editing mood:', error);
+      console.error('Error deleting mood:', error);
       return false;
     }
   };
 
+  const value = {
+    currentMood,
+    setCurrentMood,
+    moodHistory,
+    saveMoodEntry,
+    deleteMoodEntry,
+    loadMoodHistory,
+    isLoading
+  };
+
   return (
-    <ActivityContext.Provider
-      value={{
-        currentMood,
-        setCurrentMood,
-        moodHistory,
-        saveMoodEntry,
-        editMoodEntry,
-        loadMoodHistory,
-        isLoading
-      }}
-    >
+    <ActivityContext.Provider value={value}>
       {children}
     </ActivityContext.Provider>
   );
