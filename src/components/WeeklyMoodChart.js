@@ -1,30 +1,32 @@
 // src/components/WeeklyMoodChart.js
-import React from 'react';
-import { View, StyleSheet, Text, Dimensions } from 'react-native';
-import { COLORS, SPACING } from '../constants/theme';
-import { LineChart } from 'react-native-chart-kit';
+import React from "react";
+import { View, StyleSheet, Text, Dimensions } from "react-native";
+import { COLORS, SPACING } from "../constants/theme";
+import { LineChart } from "react-native-chart-kit";
 
 export default function WeeklyMoodChart({ moods }) {
   // 1) Build a list of the last 7 days
-  const last7Days = [...Array(7)].map((_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return date.toISOString().split('T')[0]; // "YYYY-MM-DD"
-  }).reverse();
+  const last7Days = [...Array(7)]
+    .map((_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    })
+    .reverse();
 
   // 2) Create data points (labels + values)
   const labels = [];
   const values = [];
 
-  last7Days.forEach(date => {
+  last7Days.forEach((date) => {
     // Gather moods for that date
-    const dayMoods = moods.filter(mood => mood.timestamp.startsWith(date));
+    const dayMoods = moods.filter((mood) => mood.timestamp.startsWith(date));
     // Could count them or average them. Let's just do count:
     const count = dayMoods.length;
 
     // Convert date to short weekday, e.g. "Mon", "Tue"
-    const weekday = new Date(date).toLocaleDateString('en-US', {
-      weekday: 'short'
+    const weekday = new Date(date).toLocaleDateString("en-US", {
+      weekday: "short",
     });
 
     labels.push(weekday);
@@ -36,14 +38,14 @@ export default function WeeklyMoodChart({ moods }) {
     labels,
     datasets: [
       {
-        data: values
-      }
-    ]
+        data: values,
+      },
+    ],
   };
 
   // 4) Dimensions for the chart
-  const screenWidth = Dimensions.get('window').width;
-  const chartWidth = screenWidth - 40; // some horizontal padding
+  const screenWidth = Dimensions.get("window").width;
+  const chartWidth = screenWidth - 80; // some horizontal padding
 
   return (
     <View style={styles.container}>
@@ -53,8 +55,8 @@ export default function WeeklyMoodChart({ moods }) {
         data={data}
         width={chartWidth}
         height={220}
-        yAxisLabel=""         // optional prefix
-        yAxisSuffix=""        // optional suffix
+        yAxisLabel="" // optional prefix
+        yAxisSuffix="" // optional suffix
         chartConfig={{
           backgroundColor: COLORS.background,
           backgroundGradientFrom: COLORS.background,
@@ -63,7 +65,7 @@ export default function WeeklyMoodChart({ moods }) {
           labelColor: (opacity = 1) => COLORS.text,
           // optional props, e.g. strokeWidth, propsForDots...
         }}
-        bezier                 // makes a smooth line
+        bezier // makes a smooth line
         style={styles.chart}
       />
 
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     borderRadius: 12,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
@@ -88,17 +90,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: SPACING.md,
   },
   chart: {
     borderRadius: 16,
   },
   legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: SPACING.md,
   },
 });

@@ -82,30 +82,29 @@ export default function MoodSelector({ onMoodSelect = () => {} }) {
     setShowNote(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedMood) return;
 
     const moodEntry = {
       mood: selectedMood,
       note: note.trim(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     try {
-      const success = await onMoodSelect(moodEntry);
-      if (success) {
-        Alert.alert('Success', 'Your mood has been logged!');
-        // Reset form
-        setNote('');
-        setShowNote(false);
-        setSelectedMood(null);
-      }
+      onMoodSelect(moodEntry);
+      Alert.alert("Success", "Your mood has been logged!");
+
+      // Reset form
+      setNote("");
+      setShowNote(false);
+      setSelectedMood(null);
     } catch (error) {
-      console.error('Error submitting mood:', error);
-      Alert.alert('Error', 'Failed to save your mood. Please try again.');
+      console.error("Error submitting mood:", error);
+      Alert.alert("Error", "Failed to save your mood. Please try again.");
     }
   };
-
+  
 
   const handleCancel = () => {
     setShowNote(false);
