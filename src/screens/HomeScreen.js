@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useActivity } from '../contexts/ActivityContext';
 import MoodSelector from '../components/MoodSelector';
 import WeatherSelector from '../components/WeatherSelector';
+import WeatherWidget from '../components/WeatherWidget';
 import { COLORS, SPACING } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
@@ -45,6 +46,7 @@ export default function HomeScreen({ navigation }) {
         selected={currentWeather}
         onSelect={handleWeatherSelect}
       />
+      <WeatherWidget />
       <TouchableOpacity
         style={[
           styles.nextButton,

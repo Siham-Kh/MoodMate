@@ -1,5 +1,6 @@
 {
-  "expo": {
+  "expo": 
+  {
     "name": "MoodMate",
     "slug": "MoodMate",
     "version": "1.0.0",
@@ -19,6 +20,14 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "plugins": [
+          [
+            "expo-location",
+            {
+              "locationAlwaysAndWhenInUsePermission": "Allow MoodMate to use your location to show weather information."
+            }
+          ]
+        ]
   }
 }
