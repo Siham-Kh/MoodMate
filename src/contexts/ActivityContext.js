@@ -16,6 +16,7 @@ export function ActivityProvider({ children }) {
   const [currentMood, setCurrentMood] = useState(null);
   const [moodHistory, setMoodHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentWeather, setCurrentWeather] = useState(null);  // Make sure this exists
 
   // Load mood history when component mounts
   useEffect(() => {
@@ -79,7 +80,9 @@ export function ActivityProvider({ children }) {
     saveMoodEntry,
     deleteMoodEntry,
     loadMoodHistory,
-    isLoading
+    isLoading,
+    setCurrentWeather,
+    currentWeather
   };
 
   return (

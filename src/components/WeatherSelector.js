@@ -11,6 +11,7 @@ export const WEATHER_TYPES = [
 ];
 
 export default function WeatherSelector({ selected, onSelect }) {
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>What's the weather like?</Text>

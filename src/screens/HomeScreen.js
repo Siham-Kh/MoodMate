@@ -31,6 +31,10 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const handleWeatherSelect = (weather) => {
+    setCurrentWeather(weather);
+  };
+
   return (
     <ScrollView style={styles.container}>
       <MoodSelector
@@ -39,7 +43,7 @@ export default function HomeScreen({ navigation }) {
       />
       <WeatherSelector
         selected={currentWeather}
-        onSelect={setCurrentWeather}
+        onSelect={handleWeatherSelect}
       />
       <TouchableOpacity
         style={[
