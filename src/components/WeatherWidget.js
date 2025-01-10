@@ -5,8 +5,9 @@ import {
   Text, 
   StyleSheet, 
   ActivityIndicator, 
-  Platform  // Added Platform import
+  Platform 
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { fetchWeather } from '../services/weatherService';
 import { COLORS, SPACING } from '../constants/theme';
@@ -23,69 +24,110 @@ const WeatherWidget = () => {
   const loadWeather = async () => {
     try {
       setLoading(true);
-      // Get location permission
+      setError(null);
+      
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setError('Location permission is required');
+        setLoading(false);
         return;
       }
 
-      // Get current location
       let location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
 
-      // Fetch weather data
       const weatherData = await fetchWeather(latitude, longitude);
-      setWeather(weatherData);
+      
+      if (weatherData && weatherData.main) {
+        setWeather(weatherData);
+      } else {
+        setError('Invalid weather data received');
+      }
     } catch (err) {
+      console.error('Weather loading error:', err);
       setError('Could not load weather data');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  // Function to get weather icon based on condition
+  const getWeatherIcon = (condition) => {
+    const weatherIcons = {
+      'Clear': 'sunny',
+      'Clouds': 'cloud',
+      'Rain': 'rainy',
+      'Snow': 'snow',
+      'Thunderstorm': 'thunderstorm',
+      'Drizzle': 'water',
+      'Mist': 'water-outline',
+      'default': 'partly-sunny'
+    };
+    return weatherIcons[condition] || weatherIcons.default;
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return <ActivityIndicator size="large" color={COLORS.primary} />;
+    }
+
+    if (error) {
+      return <Text style={styles.errorText}>{error}</Text>;
+    }
+
+    if (!weather || !weather.main) {
+      return <Text style={styles.errorText}>No weather data available</Text>;
+    }
+
+    const temp = Math.round(weather.main.temp);
+    const feelsLike = Math.round(weather.main.feels_like);
+    const mainWeather = weather.weather[0]?.main || 'Clear';
+
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
+      <>
+        <View style={styles.mainInfo}>
+          <View style={styles.temperatureContainer}>
+            <Ionicons 
+              name={getWeatherIcon(mainWeather)} 
+              size={40} 
+              color={COLORS.primary} 
+            />
+            <Text style={styles.temperature}>{temp}°C</Text>
+          </View>
+          <Text style={styles.description}>
+            {weather.weather[0]?.description || 'Unknown'}
+          </Text>
+        </View>
+        
+        <View style={styles.details}>
+          <View style={styles.detailRow}>
+            <Ionicons name="thermometer" size={20} color={COLORS.textLight} />
+            <Text style={styles.detailText}>
+              Feels like {feelsLike}°C
+            </Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Ionicons name="water" size={20} color={COLORS.textLight} />
+            <Text style={styles.detailText}>
+              Humidity: {weather.main.humidity}%
+            </Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Ionicons name="leaf" size={20} color={COLORS.textLight} />
+            <Text style={styles.detailText}>
+              Wind: {weather.wind?.speed || 0} m/s
+            </Text>
+          </View>
+        </View>
+      </>
     );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (!weather) return null;
-
-  const temp = Math.round(weather.main.temp);
-  const feelsLike = Math.round(weather.main.feels_like);
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.mainInfo}>
-        <Text style={styles.temperature}>{temp}°C</Text>
-        <Text style={styles.description}>
-          {weather.weather[0].description}
-        </Text>
-      </View>
-      
-      <View style={styles.details}>
-        <Text style={styles.detailText}>
-          Feels like {feelsLike}°C
-        </Text>
-        <Text style={styles.detailText}>
-          Humidity: {weather.main.humidity}%
-        </Text>
-        <Text style={styles.detailText}>
-          Wind: {weather.wind.speed} m/s
-        </Text>
-      </View>
+      {renderContent()}
     </View>
   );
 };
@@ -96,6 +138,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: SPACING.md,
     margin: SPACING.md,
+    minHeight: 150,
+    justifyContent: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -112,6 +156,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
+  temperatureContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
   temperature: {
     fontSize: 48,
     fontWeight: 'bold',
@@ -121,20 +170,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.textLight,
     textTransform: 'capitalize',
+    marginTop: SPACING.sm,
   },
   details: {
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     paddingTop: SPACING.md,
+    width: '100%',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+    gap: SPACING.sm,
   },
   detailText: {
     fontSize: 16,
     color: COLORS.text,
-    marginBottom: SPACING.sm,
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
+    padding: SPACING.md,
   },
 });
 

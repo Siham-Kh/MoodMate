@@ -28,6 +28,7 @@
               "locationAlwaysAndWhenInUsePermission": "Allow MoodMate to use your location to show weather information."
             }
           ]
-        ]
+        ],
+    "newArchEnabled": true
   }
 }
