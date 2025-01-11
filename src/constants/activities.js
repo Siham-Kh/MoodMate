@@ -326,6 +326,15 @@ export const ACTIVITIES = {
         impact: MOOD_IMPACT.HIGH,
         benefits: ['Nature connection', 'Mindfulness', 'Peace'],
         indoor: false,
+      },
+      {
+        id: 'TTTT',
+        title: 'TTTT TTTT',
+        description: 'Spend time tending to plants mindfully',
+        duration: ACTIVITY_DURATIONS.MEDIUM,
+        impact: MOOD_IMPACT.HIGH,
+        benefits: ['Nature connection', 'Mindfulness', 'Peace'],
+        indoor: false,
       }
     ],
     cloudy: [

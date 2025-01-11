@@ -1,3 +1,4 @@
+// src/screens/SuggestionsScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Share,
+  Dimensions,
+  Animated,
 } from 'react-native';
 import { useActivity } from '../contexts/ActivityContext';
 import { 
@@ -17,55 +20,87 @@ import {
 import { COLORS, SPACING } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
-// Activity Card Component remains the same...
-const ActivityCard = ({ activity, onShare }) => (
-  <View style={styles.activityCard}>
-    <View style={styles.activityHeader}>
+const { width: WINDOW_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = WINDOW_WIDTH * 0.8;
+const CARD_SPACING = SPACING.md;
+
+// Activity Card Component
+const ActivityCard = ({ activity, index, scrollX, onShare }) => {
+  const inputRange = [
+    (index - 1) * (CARD_WIDTH + CARD_SPACING),
+    index * (CARD_WIDTH + CARD_SPACING),
+    (index + 1) * (CARD_WIDTH + CARD_SPACING),
+  ];
+
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.9, 1, 0.9],
+  });
+
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.6, 1, 0.6],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.activityCard,
+        {
+          transform: [{ scale }],
+          opacity,
+        },
+      ]}
+    >
+      <View style={styles.activityHeader}>
+        <View style={[
+          styles.cardIconContainer,
+          { backgroundColor: activity.indoor ? COLORS.secondary + '40' : COLORS.primary + '40' }
+        ]}>
+          <Ionicons 
+            name={activity.indoor ? "home" : "leaf"} 
+            size={32} 
+            color={activity.indoor ? COLORS.secondary : COLORS.primary} 
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.shareButton}
+          onPress={() => onShare(activity)}
+        >
+          <Ionicons name="share-outline" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.activityTitle}>{activity.title}</Text>
-      <TouchableOpacity
-        style={styles.shareButton}
-        onPress={() => onShare(activity)}
-      >
-        <Ionicons name="share-outline" size={24} color={COLORS.primary} />
-      </TouchableOpacity>
-    </View>
-    
-    <Text style={styles.description}>{activity.description}</Text>
-    
-    <View style={styles.tags}>
-      <View style={styles.tag}>
-        <Ionicons name="time-outline" size={16} color={COLORS.textLight} />
-        <Text style={styles.tagText}>{DURATION_LABELS[activity.duration]}</Text>
+      <Text style={styles.description} numberOfLines={2}>
+        {activity.description}
+      </Text>
+      
+      <View style={styles.tags}>
+        <View style={styles.tag}>
+          <Ionicons name="time-outline" size={16} color={COLORS.textLight} />
+          <Text style={styles.tagText}>{DURATION_LABELS[activity.duration]}</Text>
+        </View>
+        <View style={styles.tag}>
+          <Ionicons name="trending-up" size={16} color={COLORS.textLight} />
+          <Text style={styles.tagText}>{IMPACT_LABELS[activity.impact]}</Text>
+        </View>
       </View>
-      <View style={styles.tag}>
-        <Ionicons name="trending-up" size={16} color={COLORS.textLight} />
-        <Text style={styles.tagText}>{IMPACT_LABELS[activity.impact]}</Text>
-      </View>
-      <View style={styles.tag}>
-        <Ionicons 
-          name={activity.indoor ? 'home-outline' : 'leaf-outline'} 
-          size={16} 
-          color={COLORS.textLight} 
-        />
-        <Text style={styles.tagText}>
-          {activity.indoor ? 'Indoor' : 'Outdoor'}
-        </Text>
-      </View>
-    </View>
 
-    {activity.benefits && (
-      <View style={styles.benefits}>
-        {activity.benefits.map((benefit, index) => (
-          <View key={index} style={styles.benefitTag}>
-            <Text style={styles.benefitText}>{benefit}</Text>
-          </View>
-        ))}
-      </View>
-    )}
-  </View>
-);
+      {activity.benefits && (
+        <View style={styles.benefits}>
+          {activity.benefits.map((benefit, index) => (
+            <View key={index} style={styles.benefitTag}>
+              <Text style={styles.benefitText}>{benefit}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </Animated.View>
+  );
+};
 
-// Duration Filter Component
+// Duration Filter
 const DurationFilter = ({ selected, onSelect }) => (
   <ScrollView 
     horizontal 
@@ -106,42 +141,29 @@ const DurationFilter = ({ selected, onSelect }) => (
   </ScrollView>
 );
 
+// Main Screen Component
 export default function SuggestionsScreen() {
   const { currentMood, currentWeather } = useActivity();
   const [selectedDuration, setSelectedDuration] = useState(null);
   const [activities, setActivities] = useState([]);
+  const scrollX = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Debug logs
-    console.log('Current mood:', currentMood);
-    console.log('Current weather:', currentWeather);
-    console.log('Selected duration:', selectedDuration);
-    
     if (currentMood && currentWeather) {
-      // Get the mood activities
       const moodActivities = ACTIVITIES[currentMood.id];
-      console.log('Found mood activities:', moodActivities);
-
+      
       if (moodActivities) {
-        // Get weather-specific activities
         const weatherActivities = moodActivities[currentWeather.id];
-        console.log('Found weather activities:', weatherActivities);
-
+        
         if (weatherActivities) {
-          // Filter by duration if selected
           const filteredActivities = selectedDuration
             ? weatherActivities.filter(activity => activity.duration === selectedDuration)
             : weatherActivities;
-            
-          console.log('Filtered activities:', filteredActivities);
+          
           setActivities(filteredActivities);
         } else {
-          console.log('No activities found for this weather');
           setActivities([]);
         }
-      } else {
-        console.log('No activities found for this mood');
-        setActivities([]);
       }
     }
   }, [currentMood, currentWeather, selectedDuration]);
@@ -156,14 +178,6 @@ export default function SuggestionsScreen() {
     }
   };
 
-  // Debug render
-  console.log('Rendering with activities:', activities);
-  console.log('Current render state:', { 
-    hasMood: !!currentMood, 
-    hasWeather: !!currentWeather, 
-    activitiesLength: activities?.length 
-  });
-
   if (!currentMood || !currentWeather) {
     return (
       <View style={styles.emptyContainer}>
@@ -175,7 +189,7 @@ export default function SuggestionsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerEmoji}>
           {currentMood.emoji} {currentWeather.emoji}
@@ -195,29 +209,40 @@ export default function SuggestionsScreen() {
         />
       </View>
 
-      <View style={styles.activitiesList}>
-        {activities && activities.length > 0 ? (
-          activities.map((activity, index) => (
+      {activities.length > 0 ? (
+        <Animated.FlatList
+          horizontal
+          data={activities}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_WIDTH + CARD_SPACING}
+          decelerationRate="fast"
+          contentContainerStyle={styles.cardsContainer}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true }
+          )}
+          renderItem={({ item, index }) => (
             <ActivityCard
-              key={activity.id || index}
-              activity={activity}
+              activity={item}
+              index={index}
+              scrollX={scrollX}
               onShare={handleShare}
             />
-          ))
-        ) : (
-          <View style={styles.noActivitiesContainer}>
-            <Text style={styles.noActivitiesText}>
-              {selectedDuration 
-                ? 'No activities found for the selected duration'
-                : 'No activities available for current mood and weather'}
-            </Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+          )}
+          keyExtractor={item => item.id}
+        />
+      ) : (
+        <View style={styles.noActivitiesContainer}>
+          <Text style={styles.noActivitiesText}>
+            {selectedDuration 
+              ? 'No activities found for the selected duration'
+              : 'No activities available for current mood and weather'}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -225,8 +250,9 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: SPACING.md,
-    alignItems: "center",
-    backgroundColor: COLORS.secondary + "40",
+    alignItems: 'center',
+    backgroundColor: COLORS.secondary + '40',
+    marginBottom: SPACING.md,
   },
   headerEmoji: {
     fontSize: 48,
@@ -234,25 +260,26 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    textAlign: "center",
+    textAlign: 'center',
     color: COLORS.text,
     lineHeight: 24,
   },
   highlight: {
     color: COLORS.primary,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   filtersContainer: {
-    padding: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
   },
   filterTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.text,
     marginBottom: SPACING.sm,
   },
   filterScroll: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingBottom: SPACING.sm,
   },
   filterButton: {
@@ -263,6 +290,11 @@ const styles = StyleSheet.create({
     marginRight: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
   },
   filterButtonSelected: {
     backgroundColor: COLORS.primary,
@@ -270,53 +302,65 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: COLORS.text,
+    fontWeight: '500',
   },
   filterTextSelected: {
     color: COLORS.background,
   },
-  activitiesList: {
-    padding: SPACING.md,
+  cardsContainer: {
+    paddingHorizontal: WINDOW_WIDTH * 0.07,
+    paddingVertical: SPACING.md,
   },
   activityCard: {
+    width: CARD_WIDTH,
     backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    borderRadius: 20,
+    marginHorizontal: CARD_SPACING / 2,
+    padding: SPACING.lg,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    minHeight: 300, // Fixed height to contain content
   },
   activityHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.md,
+  },
+  cardIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activityTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: 'bold',
     color: COLORS.text,
-    flex: 1,
+    marginBottom: SPACING.sm,
+    paddingRight: SPACING.lg, // Space for share button
   },
   description: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textLight,
     marginBottom: SPACING.md,
+    lineHeight: 20,
   },
   tags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.sm,
     marginBottom: SPACING.md,
+    paddingRight: SPACING.sm, // Prevent overflow
   },
   tag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.secondary + "20",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.secondary + '20',
     paddingHorizontal: SPACING.sm,
     paddingVertical: 4,
     borderRadius: 12,
@@ -325,14 +369,17 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     color: COLORS.textLight,
+    fontWeight: '500',
   },
   benefits: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.sm,
+    marginTop: 'auto', // Push to bottom of card
+    paddingTop: SPACING.md,
   },
   benefitTag: {
-    backgroundColor: COLORS.primary + "20",
+    backgroundColor: COLORS.primary + '20',
     paddingHorizontal: SPACING.sm,
     paddingVertical: 4,
     borderRadius: 12,
@@ -340,25 +387,36 @@ const styles = StyleSheet.create({
   benefitText: {
     fontSize: 12,
     color: COLORS.primary,
+    fontWeight: '500',
   },
   shareButton: {
-    padding: SPACING.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.secondary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: SPACING.xl,
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.textLight,
-    textAlign: "center",
+    textAlign: 'center',
+  },
+  noActivitiesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
   },
   noActivitiesText: {
     fontSize: 16,
     color: COLORS.textLight,
-    textAlign: "center",
-    padding: SPACING.xl,
-  },
+    textAlign: 'center',
+  }
 });
