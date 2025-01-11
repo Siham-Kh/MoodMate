@@ -1,5 +1,5 @@
 // src/screens/SuggestionsScreen.js
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,17 @@ import {
   TouchableOpacity,
   Share,
   Animated,
-} from 'react-native';
-import { useActivity } from '../contexts/ActivityContext';
-import { ACTIVITIES } from '../constants/activities';
-import { COLORS, SPACING, SHADOW } from '../constants/theme';
+} from "react-native";
+import { useActivity } from "../contexts/ActivityContext";
+import { ACTIVITIES } from "../constants/activities";
+import { COLORS, SPACING, SHADOW } from "../constants/theme";
 
 export default function SuggestionsScreen() {
   const { currentMood, currentWeather, saveActivity } = useActivity();
   const fadeAnims = React.useRef(
-    Array(5).fill(0).map(() => new Animated.Value(0))
+    Array(5)
+      .fill(0)
+      .map(() => new Animated.Value(0))
   ).current;
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export default function SuggestionsScreen() {
   }, []);
 
   const getActivities = () => {
-    const moodActivities = ACTIVITIES[currentMood.id];
-    return moodActivities ? moodActivities[currentWeather.id] : [];
+    const moodActivities = ACTIVITIES[currentMood?.id];
+    return moodActivities ? moodActivities[currentWeather?.id] || [] : [];
   };
 
   const handleShare = async (activity) => {
@@ -42,7 +44,7 @@ export default function SuggestionsScreen() {
       });
       await saveActivity(activity);
     } catch (error) {
-      console.error('Error sharing activity:', error);
+      console.error("Error sharing activity:", error);
     }
   };
 
@@ -55,9 +57,15 @@ export default function SuggestionsScreen() {
           {currentMood?.emoji} {currentWeather?.emoji}
         </Text>
         <Text style={styles.headerText}>
-          Here are some activities for when you're feeling{' '}
-          <Text style={styles.highlight}>{currentMood?.label}</Text> on a{' '}
-          <Text style={styles.highlight}>{currentWeather?.label}</Text> day
+          Here are some activities for when you're feeling{" "}
+          <Text style={styles.highlight}>
+            {currentMood?.label || "unknown mood"}
+          </Text>{" "}
+          on a{" "}
+          <Text style={styles.highlight}>
+            {currentWeather?.label || "unknown weather"}
+          </Text>{" "}
+          day
         </Text>
       </View>
 
@@ -92,7 +100,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: SPACING.md,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: COLORS.secondary,
   },
   headerEmoji: {
@@ -101,13 +109,13 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    textAlign: 'center',
+    textAlign: "center",
     color: COLORS.textLight,
     lineHeight: 24,
   },
   highlight: {
     color: COLORS.primary,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   activitiesList: {
     padding: SPACING.md,
@@ -117,9 +125,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   activityText: {
     fontSize: 16,
@@ -135,6 +143,6 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     color: COLORS.background,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
